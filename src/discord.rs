@@ -1,6 +1,6 @@
 use std::{fs::File, io::{BufRead, BufReader}};
 
-use serenity::{all::{Command, GatewayIntents, Interaction, Ready}, async_trait, builder::{CreateInteractionResponse, CreateInteractionResponseMessage}, client::{self, Context, EventHandler}, framework::{self, StandardFramework}, Client};
+use serenity::{all::{Command, GatewayIntents, Interaction, Ready}, async_trait, builder::{CreateInteractionResponse, CreateInteractionResponseMessage}, client::{Context, EventHandler}, Client};
 
 mod visualization;
 mod commands;
@@ -34,7 +34,7 @@ impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, ready: Ready) {
         println!("{:?} is connected", ready.user.name);
         
-        let command = Command::create_global_command(
+        let _command = Command::create_global_command(
             &ctx.http,
             commands::boots::register()
         )
