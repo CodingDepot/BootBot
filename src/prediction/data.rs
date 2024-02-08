@@ -50,6 +50,8 @@ pub fn get_current_match_data(puuid: &str, token: &str) -> Option<Array1<f32>> {
                         // let _ = std::io::stdout().flush();
                         sleep(Duration::from_secs(DEFAULT_RETRY_TIME));
                     }
+                } else {
+                    return None;
                 }
             }
             Err(_) => {

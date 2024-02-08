@@ -11,7 +11,7 @@ struct Handler;
 impl EventHandler for Handler {
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::Command(command) = interaction {
-            println!("Received command interaction: {command:#?}");
+            // println!("Received command interaction: {command:#?}");
 
             let options = &command.data.options();
 
@@ -40,7 +40,7 @@ impl EventHandler for Handler {
         )
         .await;
 
-        println!("Created global command: {command:#?}");
+        // println!("Created global command: {command:#?}");
     }
 }
 
