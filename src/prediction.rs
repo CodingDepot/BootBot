@@ -86,8 +86,8 @@ fn load_model(file_name: &str) -> Option<DecisionTree<f32, String>> {
 
 pub fn main() {
     let token = get_token("riot_key.txt");
-    let snowflake_puuid_map = create_snowflake_puuid_map("snowflake_puuid.txt");
-    let test_puuid = snowflake_puuid_map.values().filter(|id| id.starts_with("f7Xz")).nth(0).unwrap().clone();
+    let snowflake_map = create_snowflake_puuid_map("snowflake_puuid.txt");
+    let test_puuid = snowflake_map.values().filter(|id| id.starts_with("f7Xz")).nth(0).unwrap().clone();
     
     let tree_model: DecisionTree<f32, String>;
     let mut model_exists = false;
@@ -119,6 +119,20 @@ pub fn main() {
     if !model_exists {
         save_model(&tree_model, MODEL_FILE_NAME);
     }
+}
+
+pub fn predict(snowflake: &str) -> Option<String> {
+    let token = get_token("riot_key.txt");
+    let snowflake_map = create_snowflake_puuid_map("snowflake_puuid.txt");
+
+    if let Some(puuid) = snowflake_map.get(snowflake) {
+        if let Some(model) = load_model(MODEL_FILE_NAME) {
+            if let Some(data) = get_current_match_data(puuid, &token) {
+                return Some(predict_one(&model, &data));
+            }
+        }
+    }
+    None
 }
 
 fn create_snowflake_puuid_map(file_name: &str) -> HashMap<String, String> {
