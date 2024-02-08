@@ -1,3 +1,8 @@
+mod prediction;
+mod discord;
+
 fn main() {
-    println!("Hello, world!");
+    prediction::main();
 }
+
+
