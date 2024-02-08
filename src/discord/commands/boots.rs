@@ -4,7 +4,6 @@ use serenity::{all::{CommandOptionType, ResolvedOption, ResolvedValue, User}, bu
 use crate::prediction::predict;
 
 pub fn register() -> CreateCommand {
-    // TODO: how to set default value for option to user that triggers the command?
     CreateCommand::new("boots")
         .description("Suggests the correct boots for your ARAM match")
         .add_option(
@@ -30,7 +29,7 @@ pub fn run(options: &Vec<ResolvedOption>, calling_user: &User) -> String {
         snowflake = calling_user.id.to_string();
     }
 
-    // A New thread is necessary here:
+    // A new thread is necessary here:
     // https://stackoverflow.com/questions/62536566/how-can-i-create-a-tokio-runtime-inside-another-tokio-runtime-without-getting-th
     thread::spawn(move || {
             if let Some(prediction) = predict(&snowflake) {

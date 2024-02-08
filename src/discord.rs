@@ -1,6 +1,6 @@
 use std::{fs::File, io::{BufRead, BufReader}};
 
-use serenity::{all::{Command, GatewayIntents, Interaction, Ready}, async_trait, builder::{CreateInteractionResponse, CreateInteractionResponseMessage}, client::{Context, EventHandler}, Client};
+use serenity::{all::{Command, GatewayIntents, GuildId, Interaction, Ready}, async_trait, builder::{CreateInteractionResponse, CreateInteractionResponseMessage}, client::{Context, EventHandler}, Client};
 
 mod visualization;
 mod commands;
@@ -17,6 +17,7 @@ impl EventHandler for Handler {
 
             let content = match command.data.name.as_str() {
                 "boots" => Some(commands::boots::run(options, &command.user)),
+                "model" => Some(commands::model::run(options, &command.user)),
                 _ => None
             };
 
@@ -34,13 +35,25 @@ impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, ready: Ready) {
         println!("{:?} is connected", ready.user.name);
         
-        let _command = Command::create_global_command(
+        // TODO: environment variable
+        let guild_id = GuildId::new(
+            get_token("vip.txt").parse().unwrap()
+        );
+        
+        let _guild_command = guild_id.create_command(
+            &ctx.http,
+            commands::model::register()
+        )
+        .await;
+
+        let _global_command = Command::create_global_command(
             &ctx.http,
             commands::boots::register()
         )
         .await;
 
-        // println!("Created global command: {command:#?}");
+        // println!("Created guild command for {guild_id}: {_guild_command:#?}");
+        // println!("Created global command: {_global_command:#?}");
     }
 }
 
