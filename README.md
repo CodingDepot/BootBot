@@ -1,0 +1,7 @@
+requires environment variables:
+
+RIOT_TOKEN
+DISCORD_TOKEN
+VIP_USER
+VIP_GUILD
+GAME_VERSION

@@ -1,4 +1,4 @@
-use std::env;
+use std::{thread, env};
 use reqwest::blocking;
 
 use serenity::{all::{CommandOptionType, ResolvedOption, ResolvedValue, User}, builder::{CreateCommand, CreateCommandOption, CreateInteractionResponse, CreateInteractionResponseMessage}};
@@ -28,7 +28,13 @@ pub fn run(options: &Vec<ResolvedOption>, calling_user: &User) -> CreateInteract
         } else {
             // Careful! Could cause problems when being read at the same time!
             // https://doc.rust-lang.org/std/env/fn.set_var.html
-            if check_version(version.to_string()) {
+            let v = version.to_string();
+            let is_ok = thread::spawn(
+                move || 
+                check_version(v)
+            ).join().unwrap();
+            
+            if is_ok {
                 env::set_var("GAME_VERSION", version);
                 content = format!("Successfully changed the game version to {}", version);
             } else {
