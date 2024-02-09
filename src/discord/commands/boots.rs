@@ -1,7 +1,8 @@
 use std::thread;
 
-use serenity::{all::{CommandOptionType, ResolvedOption, ResolvedValue, User}, builder::{CreateCommand, CreateCommandOption}};
+use serenity::{all::{CommandOptionType, ResolvedOption, ResolvedValue, User}, builder::{CreateCommand, CreateCommandOption, CreateEmbed, CreateInteractionResponse, CreateInteractionResponseMessage}};
 use crate::prediction::predict;
+use crate::constants;
 
 pub fn register() -> CreateCommand {
     CreateCommand::new("boots")
@@ -16,7 +17,7 @@ pub fn register() -> CreateCommand {
         )
 }
 
-pub fn run(options: &Vec<ResolvedOption>, calling_user: &User) -> String {
+pub fn run(options: &Vec<ResolvedOption>, calling_user: &User) -> CreateInteractionResponse {
     let snowflake: String;
 
     // TODO: try to get user connection to get Riot id
@@ -31,11 +32,41 @@ pub fn run(options: &Vec<ResolvedOption>, calling_user: &User) -> String {
 
     // A new thread is necessary here:
     // https://stackoverflow.com/questions/62536566/how-can-i-create-a-tokio-runtime-inside-another-tokio-runtime-without-getting-th
-    thread::spawn(move || {
+    let suggestion = thread::spawn(move || {
             if let Some(prediction) = predict(&snowflake) {
-                return format!("You should definitely buy {}!", prediction);
+                return Some(prediction);
             }
-            String::from("I could not make a prediction for you...")
+            None
         }
-    ).join().unwrap()
+    ).join();
+
+    let mut response_message: CreateInteractionResponseMessage;
+    if let Ok(Some(boots)) = suggestion {
+        let content = format!("You should definitely buy {}!", boots);
+
+        response_message = 
+            CreateInteractionResponseMessage::new()
+                .content(content)
+                .ephemeral(true);
+
+        let id = constants::BOOT_IDS.iter()
+            .filter(|tuple| tuple.1 == boots)
+            .map(|tuple| tuple.0)
+            .nth(0);
+
+        // TODO: create constants file with boot mapping and game version
+        if let Some(boot_id) = id {
+            response_message = response_message.add_embed(
+                CreateEmbed::new() 
+                    .image(format!("https://ddragon.leagueoflegends.com/cdn/{}/img/item/{}.png", constants::GAME_VERSION, boot_id as u32))
+            );
+        }
+    } else {
+        response_message = 
+            CreateInteractionResponseMessage::new()
+                .content("I could not make a prediction for you...")
+                .ephemeral(true);
+    }
+
+    CreateInteractionResponse::Message(response_message)
 }

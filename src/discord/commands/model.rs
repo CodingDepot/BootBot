@@ -1,6 +1,6 @@
 use std::{fs::File, io::{BufRead, BufReader}, thread};
 
-use serenity::{all::{CommandOptionType, ResolvedOption, ResolvedValue, User}, builder::{CreateCommand, CreateCommandOption}};
+use serenity::{all::{CommandOptionType, ResolvedOption, ResolvedValue, User}, builder::{CreateCommand, CreateCommandOption, CreateInteractionResponse, CreateInteractionResponseMessage}};
 
 use crate::prediction::recreate_model;
 
@@ -18,27 +18,35 @@ pub fn register() -> CreateCommand {
         )
 }
 
-pub fn run(options: &Vec<ResolvedOption>, calling_user: &User) -> String {
+pub fn run(options: &Vec<ResolvedOption>, calling_user: &User) -> CreateInteractionResponse {
     let game_count: usize;
+    let content: String;
+
     if let Some(
         ResolvedOption { value: ResolvedValue::Integer(games), ..}
     ) = options.first() {
         game_count = *games as usize;
-    } else {
-        return String::from("Missing the number of games.")
-    }
 
-    // TODO: environment variables
-    // Get User from option or fall back to triggering User
-    if calling_user.id.to_string() != get_vip_snowflake("vip.txt") {
-        return String::from("You do not have permission to do this.")
-    }
-
-    thread::spawn(move || {
-            recreate_model(game_count);
+        // TODO: environment variables
+        // Get User from option or fall back to triggering User
+        if calling_user.id.to_string() != get_vip_snowflake("vip.txt") {
+            content = String::from("You do not have permission to do this.");
+        } else {
+            thread::spawn(move || {
+                    recreate_model(game_count);
+                }
+            ).join().unwrap();
+            content = format!("Successfully started training a new model from {game_count} games");
         }
-    ).join().unwrap();
-    String::from(format!("Successfully started training a new model from {game_count} games"))
+    } else {
+        content = String::from("Missing the number of games.")
+    }
+
+    CreateInteractionResponse::Message(
+        CreateInteractionResponseMessage::new()
+            .content(content)
+            .ephemeral(true)
+    )
 }
 
 fn get_vip_snowflake(file_name: &str) -> String {

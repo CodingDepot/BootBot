@@ -7,7 +7,7 @@ use bincode;
 
 use self::data::get_current_match_data;
 
-mod data;
+pub mod data;
 
 const MODEL_FILE_NAME: &str = "model.bin";
 const GOETHE: &str = "qan7meW9JWz1XI1nmZ8yD000EXpxLGkSbirRVPaRjCwcr9WeIcg32KQOTtJV71OEyov3LwCnRq5o5Q";
@@ -39,7 +39,7 @@ fn create_dataset(data: &Array2<f32>) -> DatasetBase<ArrayBase<OwnedRepr<f32>, D
 
     // create actual dataset (maps ids to String representation)
     let dataset = Dataset::new(features, labels)
-        .map_targets(|x| data::BOOT_IDS.iter().filter(|b| &b.0 == x).nth(0).map(|x| x.1).unwrap_or("No Boots").to_string())
+        .map_targets(|x| crate::constants::BOOT_IDS.iter().filter(|b| &b.0 == x).nth(0).map(|x| x.1).unwrap_or("No Boots").to_string())
         .with_feature_names(feature_names);
 
     dataset
@@ -79,6 +79,7 @@ fn load_model(file_name: &str) -> Option<DecisionTree<f32, String>> {
  *  1000    -   21 min
  *  1500    -   32 min
  *  3000    -   63 min (914)
+ *  6000    -   128 min (1809)  - 66.65%
  *  10000   -   [210 min]?
  *  20000   -   [420 min]?
  */

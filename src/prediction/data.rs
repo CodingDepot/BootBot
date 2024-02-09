@@ -5,18 +5,10 @@ use std::io::Write;
 use std::time::Duration;
 use std::thread::sleep;
 
+use crate::constants::BOOT_IDS;
+
 const PAST_GAMES: u32 = 20;
 const DEFAULT_RETRY_TIME: u64 = 40;
-pub const BOOT_IDS: [(f32, &str); 8] = [
-    (1001., "Boots"),
-    (3117., "Mobility Boots"),
-    (3006., "Berserker's Greaves"),
-    (3009., "Boots of Swiftness"),
-    (3020., "Sorcerer's Shoes"),
-    (3047., "Plated Steelcaps"),
-    (3111., "Mercury's Treads"),
-    (3158., "Ionian Boots of Lucidity"),
-];
 
 // https://developer.riotgames.com/apis#spectator-v4/GET_getCurrentGameInfoBySummoner
 pub fn get_current_match_data(puuid: &str, token: &str) -> Option<Array1<f32>> {

@@ -1,6 +1,6 @@
 use std::{fs::File, io::{BufRead, BufReader}};
 
-use serenity::{all::{Command, GatewayIntents, GuildId, Interaction, Ready}, async_trait, builder::{CreateInteractionResponse, CreateInteractionResponseMessage}, client::{Context, EventHandler}, Client};
+use serenity::{all::{Command, GatewayIntents, GuildId, Interaction, Ready}, async_trait, builder::CreateInteractionResponse, client::{Context, EventHandler}, Client};
 
 mod visualization;
 mod commands;
@@ -15,19 +15,14 @@ impl EventHandler for Handler {
 
             let options = &command.data.options();
 
-            let content = match command.data.name.as_str() {
-                "boots" => Some(commands::boots::run(options, &command.user)),
-                "model" => Some(commands::model::run(options, &command.user)),
-                _ => None
+            let response = match command.data.name.as_str() {
+                "boots" => commands::boots::run(options, &command.user),
+                "model" => commands::model::run(options, &command.user),
+                _ => CreateInteractionResponse::Pong,
             };
 
-            if let Some(content) = content {
-                let response = CreateInteractionResponse::Message(
-                    CreateInteractionResponseMessage::new().content(content).ephemeral(true)
-                );
-                if let Err(reason) = command.create_response(&ctx.http, response).await {
-                    println!("Could not respond to command: {reason}");
-                }
+            if let Err(reason) = command.create_response(&ctx.http, response).await {
+                println!("Could not respond to command: {reason}");
             }
         }
     }
