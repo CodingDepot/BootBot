@@ -86,7 +86,7 @@ fn load_model(file_name: &str) -> Option<DecisionTree<f32, String>> {
 pub fn recreate_model(game_count: usize) {
     let token: &str = &env::var("RIOT_TOKEN")
         .expect("Could not fetch the Riot token");
-    let snowflake_map = create_snowflake_puuid_map("snowflake_puuid.txt");
+    let snowflake_map = create_snowflake_puuid_map(crate::constants::MAPPING_FILE);
     let test_puuid = snowflake_map.values().filter(|id| id.starts_with("f7Xz")).nth(0).unwrap().clone();
 
     // Train a new model
@@ -107,7 +107,7 @@ pub fn recreate_model(game_count: usize) {
 pub fn predict(snowflake: &str) -> Option<String> {
     let token: &str = &env::var("RIOT_TOKEN")
         .expect("Could not fetch the Riot token");
-    let snowflake_map = create_snowflake_puuid_map("snowflake_puuid.txt");
+    let snowflake_map = create_snowflake_puuid_map(crate::constants::MAPPING_FILE);
 
     if let Some(puuid) = snowflake_map.get(snowflake) {
         if let Some(model) = load_model(MODEL_FILE_NAME) {
