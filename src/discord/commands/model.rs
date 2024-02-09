@@ -1,4 +1,4 @@
-use std::{fs::File, io::{BufRead, BufReader}, thread};
+use std::{thread, env};
 
 use serenity::{all::{CommandOptionType, ResolvedOption, ResolvedValue, User}, builder::{CreateCommand, CreateCommandOption, CreateInteractionResponse, CreateInteractionResponseMessage}};
 
@@ -21,6 +21,8 @@ pub fn register() -> CreateCommand {
 pub fn run(options: &Vec<ResolvedOption>, calling_user: &User) -> CreateInteractionResponse {
     let game_count: usize;
     let content: String;
+    let vip_snowflake: &str = &env::var("VIP_USER")
+        .expect("Could not fetch the VIP User");
 
     if let Some(
         ResolvedOption { value: ResolvedValue::Integer(games), ..}
@@ -29,7 +31,7 @@ pub fn run(options: &Vec<ResolvedOption>, calling_user: &User) -> CreateInteract
 
         // TODO: environment variables
         // Get User from option or fall back to triggering User
-        if calling_user.id.to_string() != get_vip_snowflake("vip.txt") {
+        if calling_user.id.to_string() != vip_snowflake {
             content = String::from("You do not have permission to do this.");
         } else {
             thread::spawn(move || {
@@ -47,11 +49,4 @@ pub fn run(options: &Vec<ResolvedOption>, calling_user: &User) -> CreateInteract
             .content(content)
             .ephemeral(true)
     )
-}
-
-fn get_vip_snowflake(file_name: &str) -> String {
-    let file = File::open(file_name).unwrap();
-    let reader = BufReader::new(file);
-
-    reader.lines().nth(1).unwrap().unwrap()
 }

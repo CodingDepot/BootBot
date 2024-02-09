@@ -1,8 +1,7 @@
-use std::{fs::File, io::{BufRead, BufReader}};
+use std::env;
 
 use serenity::{all::{Command, GatewayIntents, GuildId, Interaction, Ready}, async_trait, builder::CreateInteractionResponse, client::{Context, EventHandler}, Client};
 
-mod visualization;
 mod commands;
 
 struct Handler;
@@ -30,9 +29,11 @@ impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, ready: Ready) {
         println!("{:?} is connected", ready.user.name);
         
-        // TODO: environment variable
         let guild_id = GuildId::new(
-            get_token("vip.txt").parse().unwrap()
+            env::var("VIP_GUILD")
+                .expect("Could not fetch the VIP guild")
+                .parse()
+                .expect("Could not parse the VIP guild")
         );
         
         let _guild_command = guild_id.create_command(
@@ -55,7 +56,9 @@ impl EventHandler for Handler {
 #[tokio::main]
 pub async fn main() {
     // Create the client
-    let token = get_token("discord_key.txt");
+    let token: &str = &env::var("DISCORD_TOKEN")
+        .expect("Could not fetch the Discord token");
+
     let mut client = Client::builder(token, GatewayIntents::empty())
         .event_handler(Handler)
         .await
@@ -65,11 +68,4 @@ pub async fn main() {
     if let Err(reason) = client.start().await {
         println!("Eclient error: {reason}");
     }
-}
-
-fn get_token(file_name: &str) -> String {
-    let file = File::open(file_name).unwrap();
-    let reader = BufReader::new(file);
-
-    reader.lines().nth(0).unwrap().unwrap()
 }

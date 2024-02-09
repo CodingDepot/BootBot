@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs::File, io::{BufRead, BufReader, Read}, time::{SystemTime, UNIX_EPOCH}};
+use std::{collections::HashMap, fs::File, io::{BufRead, BufReader, Read}, time::{SystemTime, UNIX_EPOCH}, env};
 
 use linfa::{metrics::ToConfusionMatrix, traits::{Fit, Predict}, Dataset, DatasetBase};
 use linfa_trees::{DecisionTree, SplitQuality};
@@ -84,7 +84,8 @@ fn load_model(file_name: &str) -> Option<DecisionTree<f32, String>> {
  *  20000   -   [420 min]?
  */
 pub fn recreate_model(game_count: usize) {
-    let token = get_token("riot_key.txt");
+    let token: &str = &env::var("RIOT_TOKEN")
+        .expect("Could not fetch the Riot token");
     let snowflake_map = create_snowflake_puuid_map("snowflake_puuid.txt");
     let test_puuid = snowflake_map.values().filter(|id| id.starts_with("f7Xz")).nth(0).unwrap().clone();
 
@@ -104,7 +105,8 @@ pub fn recreate_model(game_count: usize) {
 }
 
 pub fn predict(snowflake: &str) -> Option<String> {
-    let token = get_token("riot_key.txt");
+    let token: &str = &env::var("RIOT_TOKEN")
+        .expect("Could not fetch the Riot token");
     let snowflake_map = create_snowflake_puuid_map("snowflake_puuid.txt");
 
     if let Some(puuid) = snowflake_map.get(snowflake) {
@@ -133,13 +135,6 @@ fn create_snowflake_puuid_map(file_name: &str) -> HashMap<String, String> {
         map.insert(parts[0].trim().to_string(), parts[1].trim().to_string());
     }
     map
-}
-
-fn get_token(file_name: &str) -> String {
-    let file = File::open(file_name).unwrap();
-    let reader = BufReader::new(file);
-
-    reader.lines().nth(0).unwrap().unwrap()
 }
 
 #[cfg(test)]
