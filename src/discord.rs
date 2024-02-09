@@ -17,6 +17,7 @@ impl EventHandler for Handler {
             let response = match command.data.name.as_str() {
                 "boots" => commands::boots::run(options, &command.user),
                 "model" => commands::model::run(options, &command.user),
+                "version" => commands::version::run(options, &command.user),
                 _ => CreateInteractionResponse::Pong,
             };
 
@@ -36,9 +37,12 @@ impl EventHandler for Handler {
                 .expect("Could not parse the VIP guild")
         );
         
-        let _guild_command = guild_id.create_command(
+        let _guild_command = guild_id.set_commands(
             &ctx.http,
-            commands::model::register()
+            vec![
+                commands::model::register(),
+                commands::version::register(),
+            ]
         )
         .await;
 

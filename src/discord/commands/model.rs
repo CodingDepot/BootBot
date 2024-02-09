@@ -10,7 +10,7 @@ pub fn register() -> CreateCommand {
         .add_option(
             CreateCommandOption::new(
                 CommandOptionType::Integer,
-                "game count",
+                "game_count",
                 "How many games the model uses as training data. 1000 games = 21 minutes"
             )
             .min_int_value(1)
@@ -29,15 +29,13 @@ pub fn run(options: &Vec<ResolvedOption>, calling_user: &User) -> CreateInteract
     ) = options.first() {
         game_count = *games as usize;
 
-        // TODO: environment variables
-        // Get User from option or fall back to triggering User
         if calling_user.id.to_string() != vip_snowflake {
             content = String::from("You do not have permission to do this.");
         } else {
             thread::spawn(move || {
                     recreate_model(game_count);
                 }
-            ).join().unwrap();
+            );
             content = format!("Successfully started training a new model from {game_count} games");
         }
     } else {

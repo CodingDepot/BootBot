@@ -1,4 +1,3 @@
-pub const GAME_VERSION: &str = "14.3.1";
 pub const BOOT_IDS: [(f32, &str); 8] = [
     (1001., "Boots"),
     (3006., "Berserker's Greaves"),

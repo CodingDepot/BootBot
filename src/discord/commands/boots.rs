@@ -1,8 +1,7 @@
-use std::thread;
+use std::{thread, env};
 
 use serenity::{all::{CommandOptionType, ResolvedOption, ResolvedValue, User}, builder::{CreateCommand, CreateCommandOption, CreateEmbed, CreateInteractionResponse, CreateInteractionResponseMessage}};
 use crate::prediction::predict;
-use crate::constants;
 
 pub fn register() -> CreateCommand {
     CreateCommand::new("boots")
@@ -49,16 +48,17 @@ pub fn run(options: &Vec<ResolvedOption>, calling_user: &User) -> CreateInteract
                 .content(content)
                 .ephemeral(true);
 
-        let id = constants::BOOT_IDS.iter()
+        let id = crate::constants::BOOT_IDS.iter()
             .filter(|tuple| tuple.1 == boots)
             .map(|tuple| tuple.0)
             .nth(0);
 
-        // TODO: create constants file with boot mapping and game version
         if let Some(boot_id) = id {
+            let game_version = env::var("GAME_VERSION").expect("Could not fetch the game version");
+
             response_message = response_message.add_embed(
                 CreateEmbed::new() 
-                    .image(format!("https://ddragon.leagueoflegends.com/cdn/{}/img/item/{}.png", constants::GAME_VERSION, boot_id as u32))
+                    .image(format!("https://ddragon.leagueoflegends.com/cdn/{}/img/item/{}.png", game_version, boot_id as u32))
             );
         }
     } else {
