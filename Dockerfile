@@ -5,4 +5,4 @@ COPY . .
 
 RUN cargo install --path .
 
-CMD ["boot_bot"]
+ENTRYPOINT ["boot_bot"]
