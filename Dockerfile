@@ -1,4 +1,4 @@
-FROM rust:alpine3.19
+FROM rust:buster
 
 WORKDIR /bootbot
 COPY . .
