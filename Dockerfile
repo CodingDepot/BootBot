@@ -3,6 +3,8 @@ FROM rust:bullseye
 WORKDIR /boot-bot
 COPY . .
 
-RUN cargo install --path .
+RUN apt update
+RUN apt install gcc-arm-linux-gnueabihf -y
 
-ENTRYPOINT ["boot_bot"]
+RUN rustup target add armv7-unknown-linux-gnueabihf
+RUN cargo install --target armv7-unknown-linux-gnueabihf --path .

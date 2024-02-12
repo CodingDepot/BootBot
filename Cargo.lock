@@ -119,6 +119,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "boot_bot"
+version = "0.1.0"
+dependencies = [
+ "bincode",
+ "linfa",
+ "linfa-trees",
+ "ndarray",
+ "openssl",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "serenity",
+ "tokio",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -992,6 +1008,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ff011a302c396a5197692431fc1948019154afc178baf7d8e37367442a4601cf"
 
 [[package]]
+name = "openssl-src"
+version = "300.2.2+3.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8bbfad0063610ac26ee79f7484739e2b07555a75c42453b89263830b5c8103bc"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "openssl-sys"
 version = "0.9.99"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -999,6 +1024,7 @@ checksum = "22e1bf214306098e4832460f797824c05d25aacdf896f64a985fb0fd992454ae"
 dependencies = [
  "cc",
  "libc",
+ "openssl-src",
  "pkg-config",
  "vcpkg",
 ]
@@ -1225,21 +1251,6 @@ dependencies = [
  "spin",
  "untrusted",
  "windows-sys 0.48.0",
-]
-
-[[package]]
-name = "rust_boots_ml"
-version = "0.1.0"
-dependencies = [
- "bincode",
- "linfa",
- "linfa-trees",
- "ndarray",
- "reqwest",
- "serde",
- "serde_json",
- "serenity",
- "tokio",
 ]
 
 [[package]]
