@@ -7,5 +7,5 @@ namespace="codingdepot"
 project="boot-bot"
 version=$(cargo metadata --no-deps | jq -r .packages[0].version)
 
-docker build --network=host -t ${namespace}/${project}:${version} .
+docker build --network=host -t ${namespace}/${project}:${version}-pi .
 docker push ${namespace}/${project}:${version}
