@@ -1,4 +1,4 @@
-FROM rust:bullseye
+FROM rust:bullseye@sha256:3838b21cf7e71497a3b2fdd0ae50c75c91a7f499a15b78a0218c56829f02da00
 
 WORKDIR /bootbot
 COPY . .
