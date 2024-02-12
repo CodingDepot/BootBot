@@ -2,6 +2,7 @@ FROM rust:latest
  
 RUN apt update && apt upgrade -y 
 RUN apt install -y g++-arm-linux-gnueabihf libc6-dev-armhf-cross
+RUN apt install libssl-dev
  
 RUN rustup target add armv7-unknown-linux-gnueabihf 
 RUN rustup toolchain install stable-armv7-unknown-linux-gnueabihf 
