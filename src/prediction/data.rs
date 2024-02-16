@@ -1,6 +1,7 @@
 use ndarray::{Array1, Array2};
 use reqwest::blocking;
 use serde_json::{Value, from_str, from_value};
+use crate::error::{BootError, Kind};
 use std::io::Write;
 use std::time::Duration;
 use std::thread::sleep;
@@ -11,7 +12,7 @@ const PAST_GAMES: u32 = 20;
 const DEFAULT_RETRY_TIME: u64 = 40;
 
 // https://developer.riotgames.com/apis#spectator-v4/GET_getCurrentGameInfoBySummoner
-pub fn get_current_match_data(puuid: &str, token: &str) -> Option<Array1<f32>> {
+pub fn get_current_match_data(puuid: &str, token: &str) -> Result<Array1<f32>, BootError> {
     let client = blocking::Client::new();
     let id_uri: String = ["https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/", puuid].join("");
     let summoner_id: String;
@@ -26,8 +27,8 @@ pub fn get_current_match_data(puuid: &str, token: &str) -> Option<Array1<f32>> {
         match response {
             Ok(res) => {
                 if res.status().is_success() {
-                    let body = res.text().unwrap();
-                    let parsed_value: Value = from_str(&body).unwrap();
+                    let body = res.text()?;
+                    let parsed_value: Value = from_str(&body)?;
                     summoner_id = parsed_value.get("id").unwrap().as_str().unwrap().to_string();
                     break;
                 } else if res.status() == reqwest::StatusCode::TOO_MANY_REQUESTS {
@@ -43,11 +44,14 @@ pub fn get_current_match_data(puuid: &str, token: &str) -> Option<Array1<f32>> {
                         sleep(Duration::from_secs(DEFAULT_RETRY_TIME));
                     }
                 } else {
-                    return None;
+                    return Err(BootError {
+                        kind: Kind::INTERNAL,
+                        message: String::from("Invalid PUUID"),
+                    });
                 }
             }
-            Err(_) => {
-                return None
+            Err(e) => {
+                return Err(BootError::from(e));
             }
         }
     }
@@ -64,33 +68,42 @@ pub fn get_current_match_data(puuid: &str, token: &str) -> Option<Array1<f32>> {
         match response {
             Ok(res) => {
                 if res.status().is_success() {
-                    let body = res.text().unwrap();
-                    let parsed_value: Value = from_str(&body).unwrap();
+                    let body = res.text()?;
+                    let parsed_value: Value = from_str(&body)?;
                     game_info = parsed_value;
                     break;
                 } else if res.status() == reqwest::StatusCode::TOO_MANY_REQUESTS {
                     if let Some(retry_after) = res.headers().get("Retry-After") {
                         if let Ok(retry_seconds) = retry_after.to_str().unwrap_or(&DEFAULT_RETRY_TIME.to_string()).parse::<u64>() {
-                            print!(" /!\\ ({:?})", retry_seconds);
-                            let _ = std::io::stdout().flush();
+                            // print!(" /!\\ ({:?})", retry_seconds);
+                            // let _ = std::io::stdout().flush();
                             sleep(Duration::from_secs(retry_seconds));
                         }
                     } else {
-                        print!(" /!\\ ({:?})", DEFAULT_RETRY_TIME);
-                        let _ = std::io::stdout().flush();
+                        // print!(" /!\\ ({:?})", DEFAULT_RETRY_TIME);
+                        // let _ = std::io::stdout().flush();
                         sleep(Duration::from_secs(DEFAULT_RETRY_TIME));
                     }
                 } else if res.status() == reqwest::StatusCode::NOT_FOUND {
-                    return None;
+                    return Err(BootError {
+                        kind: Kind::INTERNAL,
+                        message: String::from("You are not currently in a game"),
+                    });
                 }
             }
-            Err(_) => {
-                return None;
+            Err(e) => {
+                return Err(BootError::from(e));
             }
         }
     }
 
-    prepare_game_data(game_info, &summoner_id)
+    match prepare_game_data(game_info, &summoner_id) {
+        Some(data) => Ok(data),
+        None => Err(BootError {
+            kind: Kind::INTERNAL,
+            message: String::from("I can only make good predictions for ARAM games")
+        })
+    }
 }
 
 pub fn get_training_data(starting_puuids: Vec<String>, count: usize, token: &str) -> Array2<f32> {

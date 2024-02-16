@@ -5,6 +5,8 @@ use linfa_trees::{DecisionTree, SplitQuality};
 use ndarray::{s, Array1, Array2, ArrayBase, Axis, Dim, OwnedRepr};
 use bincode;
 
+use crate::error::{BootError, Kind};
+
 use self::data::get_current_match_data;
 
 pub mod data;
@@ -107,20 +109,36 @@ pub fn recreate_model(game_count: usize) {
     save_model(&tree_model, MODEL_FILE_NAME);
 }
 
-pub fn predict(snowflake: &str) -> Option<String> {
+pub fn predict(snowflake: &str) -> Result<String, BootError> {
     let token: &str = &env::var("RIOT_TOKEN")
         .expect("Could not fetch the Riot token");
     let base_path = env::var("CONFIG_PATH").unwrap_or(String::new());
     let snowflake_map = create_snowflake_puuid_map(&format!("{}{}", base_path, crate::constants::MAPPING_FILE));
 
-    if let Some(puuid) = snowflake_map.get(snowflake) {
-        if let Some(model) = load_model(MODEL_FILE_NAME) {
-            if let Some(data) = get_current_match_data(puuid, &token) {
-                return Some(predict_one(&model, &data));
+    match snowflake_map.get(snowflake) {
+        Some(puuid) => {
+            match load_model(MODEL_FILE_NAME) {
+                Some(model) => {
+                    match get_current_match_data(puuid, &token) {
+                        Ok(data) => return Ok(predict_one(&model, &data)),
+                        Err(err) => return Err(err),
+                    }
+                },
+                None => {
+                    return Err(BootError {
+                        kind: Kind::INTERNAL,
+                        message: String::from("I have not been properly trained yet"),
+                    })
+                }
             }
+        },
+        None => {
+            return Err(BootError {
+                kind: Kind::INTERNAL,
+                message: String::from("You are not a registered user"),
+            })
         }
     }
-    None
 }
 
 fn create_snowflake_puuid_map(file_name: &str) -> HashMap<String, String> {
