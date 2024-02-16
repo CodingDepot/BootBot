@@ -32,40 +32,46 @@ pub fn run(options: &Vec<ResolvedOption>, calling_user: &User) -> CreateInteract
     // A new thread is necessary here:
     // https://stackoverflow.com/questions/62536566/how-can-i-create-a-tokio-runtime-inside-another-tokio-runtime-without-getting-th
     let suggestion = thread::spawn(move || {
-            if let Some(prediction) = predict(&snowflake) {
-                return Some(prediction);
-            }
-            None
+            predict(&snowflake)
         }
     ).join();
 
     let mut response_message: CreateInteractionResponseMessage;
-    if let Ok(Some(boots)) = suggestion {
-        let content = format!("You should definitely buy {}!", boots);
+    match suggestion {
+        Ok(Ok(boots)) => {
+            let content = format!("You should definitely buy {}!", boots);
 
-        response_message = 
+            response_message = 
+                CreateInteractionResponseMessage::new()
+                    .content(content)
+                    .ephemeral(true);
+    
+            let id = crate::constants::BOOT_IDS.iter()
+                .filter(|tuple| tuple.1 == boots)
+                .map(|tuple| tuple.0)
+                .nth(0);
+    
+            if let Some(boot_id) = id {
+                let game_version = env::var("GAME_VERSION").expect("Could not fetch the game version");
+    
+                response_message = response_message.add_embed(
+                    CreateEmbed::new() 
+                        .image(format!("https://ddragon.leagueoflegends.com/cdn/{}/img/item/{}.png", game_version, boot_id as u32))
+                );
+            }
+        },
+        Ok(Err(error)) => {
+            response_message = 
             CreateInteractionResponseMessage::new()
-                .content(content)
+                .content(format!("{}", error.message))
                 .ephemeral(true);
-
-        let id = crate::constants::BOOT_IDS.iter()
-            .filter(|tuple| tuple.1 == boots)
-            .map(|tuple| tuple.0)
-            .nth(0);
-
-        if let Some(boot_id) = id {
-            let game_version = env::var("GAME_VERSION").expect("Could not fetch the game version");
-
-            response_message = response_message.add_embed(
-                CreateEmbed::new() 
-                    .image(format!("https://ddragon.leagueoflegends.com/cdn/{}/img/item/{}.png", game_version, boot_id as u32))
-            );
+        },
+        _ => {
+            response_message = 
+            CreateInteractionResponseMessage::new()
+                .content(format!("Error: Thread failed"))
+                .ephemeral(true);
         }
-    } else {
-        response_message = 
-            CreateInteractionResponseMessage::new()
-                .content("I could not make a prediction for you...")
-                .ephemeral(true);
     }
 
     CreateInteractionResponse::Message(response_message)
