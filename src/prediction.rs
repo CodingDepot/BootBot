@@ -60,12 +60,14 @@ fn train_decision_tree(data: &Array2<f32>, sq: SplitQuality) -> DecisionTree<f32
 }
 
 fn save_model(model: &DecisionTree<f32, String>, file_name: &str) {
-    let model_file = File::create(file_name).unwrap();
+    let base_path = env::var("CONFIG_PATH").unwrap_or(String::new());
+    let model_file = File::create(format!("{}{}", base_path, file_name)).unwrap();
     bincode::serialize_into(&model_file, &model).unwrap();
 }
 
 fn load_model(file_name: &str) -> Option<DecisionTree<f32, String>> {
-    if let Ok(mut model_file) = File::open(file_name) {
+    let base_path = env::var("CONFIG_PATH").unwrap_or(String::new());
+    if let Ok(mut model_file) = File::open(format!("{}{}", base_path, file_name)) {
         let mut buffer = Vec::new();
         model_file.read_to_end(&mut buffer).unwrap();
         let deserialized_model: DecisionTree<f32, String> = bincode::deserialize(&buffer).unwrap();
@@ -88,7 +90,8 @@ fn load_model(file_name: &str) -> Option<DecisionTree<f32, String>> {
 pub fn recreate_model(game_count: usize) {
     let token: &str = &env::var("RIOT_TOKEN")
         .expect("Could not fetch the Riot token");
-    let snowflake_map = create_snowflake_puuid_map(crate::constants::MAPPING_FILE);
+    let base_path = env::var("CONFIG_PATH").unwrap_or(String::new());
+    let snowflake_map = create_snowflake_puuid_map(&format!("{}{}", base_path, crate::constants::MAPPING_FILE));
     let test_puuid = snowflake_map.values().filter(|id| id.starts_with("f7Xz")).nth(0).unwrap().clone();
 
     // Train a new model
@@ -109,7 +112,8 @@ pub fn recreate_model(game_count: usize) {
 pub fn predict(snowflake: &str) -> Result<String, BootError> {
     let token: &str = &env::var("RIOT_TOKEN")
         .expect("Could not fetch the Riot token");
-    let snowflake_map = create_snowflake_puuid_map(crate::constants::MAPPING_FILE);
+    let base_path = env::var("CONFIG_PATH").unwrap_or(String::new());
+    let snowflake_map = create_snowflake_puuid_map(&format!("{}{}", base_path, crate::constants::MAPPING_FILE));
 
     match snowflake_map.get(snowflake) {
         Some(puuid) => {
