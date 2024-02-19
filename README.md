@@ -58,6 +58,10 @@ Also, even when adding a pre-trained model remember to start training a new mode
 
 ## FAQ
 
+### Does this bot work for game modes other than ARAM?
+
+No, the bot only likes ARAM and it refuses to join my Clash team.
+
 ### How do you handle Cassiopeia?
 
 I do not. Please do not ask the bot for a suggestion when playing Cassiopeia, since it there is a slim chance it leads to the technological singularity.
