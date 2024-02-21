@@ -8,6 +8,7 @@ pub(crate) enum Kind {
     INTERNAL,
 }
 
+#[derive(Debug)]
 pub(crate) struct BootError {
     pub(crate) kind: Kind,
     pub(crate) message: String,

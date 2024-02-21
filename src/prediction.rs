@@ -93,7 +93,7 @@ pub fn recreate_model(game_count: usize) {
     let base_path = env::var("CONFIG_PATH").unwrap_or(String::new());
     let snowflake_map = create_snowflake_summoner_map
 (&format!("{}{}", base_path, crate::constants::MAPPING_FILE));
-    let test_names: Vec<String>= snowflake_map.values().collect();
+    let test_names: Vec<String>= snowflake_map.values().map(|name| name.to_owned()).collect();
 
     // Train a new model
     let start_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
