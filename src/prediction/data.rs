@@ -14,7 +14,7 @@ const DEFAULT_RETRY_TIME: u64 = 40;
 // https://developer.riotgames.com/apis#spectator-v4/GET_getCurrentGameInfoBySummoner
 pub fn get_current_match_data(name: &str, token: &str) -> Result<Array1<f32>, BootError> {
     let client = blocking::Client::new();
-    let id_uri: String = format!("/lol/summoner/v4/summoners/by-name/{name}");
+    let id_uri: String = format!("https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/{name}");
     let summoner_id: String;
 
     // Get the summonerID from the PUUID
@@ -125,7 +125,7 @@ fn fetch_games(starting_names: Vec<String>, count: usize, token: &str) -> Result
     {
         let client = blocking::Client::new();
         for name in starting_names {
-            let uri = format!("/lol/summoner/v4/summoners/by-name/{name}");
+            let uri = format!("https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/{name}");
             let response = client
                 .get(&uri)
                 .header("X-Riot-Token", token)
