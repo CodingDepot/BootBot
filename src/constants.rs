@@ -8,4 +8,4 @@ pub const BOOT_IDS: [(f32, &str); 8] = [
     (3117., "Mobility Boots"),
     (3158., "Ionian Boots of Lucidity"),
 ];
-pub const MAPPING_FILE: &str = "snowflake_puuid.txt";
+pub const MAPPING_FILE: &str = "snowflake_summoner.txt";

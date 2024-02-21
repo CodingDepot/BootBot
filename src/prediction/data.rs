@@ -12,9 +12,9 @@ const PAST_GAMES: u32 = 20;
 const DEFAULT_RETRY_TIME: u64 = 40;
 
 // https://developer.riotgames.com/apis#spectator-v4/GET_getCurrentGameInfoBySummoner
-pub fn get_current_match_data(puuid: &str, token: &str) -> Result<Array1<f32>, BootError> {
+pub fn get_current_match_data(name: &str, token: &str) -> Result<Array1<f32>, BootError> {
     let client = blocking::Client::new();
-    let id_uri: String = ["https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/", puuid].join("");
+    let id_uri: String = format!("https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/{name}");
     let summoner_id: String;
 
     // Get the summonerID from the PUUID
@@ -77,9 +77,13 @@ pub fn get_current_match_data(puuid: &str, token: &str) -> Result<Array1<f32>, B
                         if let Ok(retry_seconds) = retry_after.to_str().unwrap_or(&DEFAULT_RETRY_TIME.to_string()).parse::<u64>() {
                             // print!(" /!\\ ({:?})", retry_seconds);
                             // let _ = std::io::stdout().flush();
+                            // print!(" /!\\ ({:?})", retry_seconds);
+                            // let _ = std::io::stdout().flush();
                             sleep(Duration::from_secs(retry_seconds));
                         }
                     } else {
+                        // print!(" /!\\ ({:?})", DEFAULT_RETRY_TIME);
+                        // let _ = std::io::stdout().flush();
                         // print!(" /!\\ ({:?})", DEFAULT_RETRY_TIME);
                         // let _ = std::io::stdout().flush();
                         sleep(Duration::from_secs(DEFAULT_RETRY_TIME));
@@ -106,17 +110,60 @@ pub fn get_current_match_data(puuid: &str, token: &str) -> Result<Array1<f32>, B
     }
 }
 
-pub fn get_training_data(starting_puuids: Vec<String>, count: usize, token: &str) -> Array2<f32> {
-    let games = fetch_games(starting_puuids, count, token).unwrap();
+pub fn get_training_data(starting_names: Vec<String>, count: usize, token: &str) -> Array2<f32> {
+    let games = fetch_games(starting_names, count, token).unwrap();
     prepare_training_data(games)
 }
 
-fn fetch_games(starting_puuids: Vec<String>, count: usize, token: &str) -> Result<Vec<Value>, serde_json::Error> {
+fn fetch_games(starting_names: Vec<String>, count: usize, token: &str) -> Result<Vec<Value>, BootError> {
     let mut known_puuids: Vec<String> = vec![];
-    let mut new_puuids: Vec<String> = starting_puuids;
+    let mut new_puuids: Vec<String> = vec![];
     let mut game_ids: Vec<String> = vec![];
     let mut games: Vec<Value> = vec![];
     let mut duplicate_games: usize = 0;
+
+    {
+        let client = blocking::Client::new();
+        for name in starting_names {
+            let uri = format!("https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/{name}");
+            let response = client
+                .get(&uri)
+                .header("X-Riot-Token", token)
+                .send();
+
+            match response {
+                Ok(res) => {
+                    if res.status().is_success() {
+                        let body: Value = from_str(&res.text().unwrap()).unwrap();
+                        let puuid: String = from_value(body.get("puuid").unwrap().clone()).unwrap();
+                        new_puuids.push(puuid);
+                    } else if res.status() == reqwest::StatusCode::TOO_MANY_REQUESTS {
+                        if let Some(retry_after) = res.headers().get("Retry-After") {
+                            if let Ok(retry_seconds) = retry_after.to_str().unwrap_or(&DEFAULT_RETRY_TIME.to_string()).parse::<u64>() {
+                                sleep(Duration::from_secs(retry_seconds));
+                            }
+                        } else {
+                            sleep(Duration::from_secs(DEFAULT_RETRY_TIME));
+                        }
+                    } else {
+                        print!("\rSummoner API returned code {:?}", res.status());
+                        let _ = std::io::stdout().flush();
+                        continue;
+                    }
+                }
+                Err(_) => {
+                    continue;
+                }
+            }
+        }
+    }
+
+    if new_puuids.len() == 0 {
+        return Err(BootError {
+            kind: Kind::INTERNAL,
+            message: String::from("No starting PUUIDS to fetch games"),
+        });
+    }
 
     println!("Downloading data from {:?} ARAM games.", count);
     while games.len() < count {

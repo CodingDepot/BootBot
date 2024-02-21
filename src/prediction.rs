@@ -91,12 +91,13 @@ pub fn recreate_model(game_count: usize) {
     let token: &str = &env::var("RIOT_TOKEN")
         .expect("Could not fetch the Riot token");
     let base_path = env::var("CONFIG_PATH").unwrap_or(String::new());
-    let snowflake_map = create_snowflake_puuid_map(&format!("{}{}", base_path, crate::constants::MAPPING_FILE));
-    let test_puuid = snowflake_map.values().filter(|id| id.starts_with("f7Xz")).nth(0).unwrap().clone();
+    let snowflake_map = create_snowflake_summoner_map
+(&format!("{}{}", base_path, crate::constants::MAPPING_FILE));
+    let test_names: Vec<String>= snowflake_map.values().map(|name| name.to_owned()).collect();
 
     // Train a new model
     let start_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
-    let data = data::get_training_data(vec![test_puuid.clone()], game_count, &token);
+    let data = data::get_training_data(test_names, game_count, &token);
     let end_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
     println!("\nPrepared all game data in {} minutes", (end_time - start_time).as_secs() / 60);
     let tree_model = train_decision_tree(&data, SplitQuality::Gini);
@@ -113,13 +114,14 @@ pub fn predict(snowflake: &str) -> Result<String, BootError> {
     let token: &str = &env::var("RIOT_TOKEN")
         .expect("Could not fetch the Riot token");
     let base_path = env::var("CONFIG_PATH").unwrap_or(String::new());
-    let snowflake_map = create_snowflake_puuid_map(&format!("{}{}", base_path, crate::constants::MAPPING_FILE));
+    let snowflake_map = create_snowflake_summoner_map
+(&format!("{}{}", base_path, crate::constants::MAPPING_FILE));
 
     match snowflake_map.get(snowflake) {
-        Some(puuid) => {
+        Some(name) => {
             match load_model(MODEL_FILE_NAME) {
                 Some(model) => {
-                    match get_current_match_data(puuid, &token) {
+                    match get_current_match_data(name, &token) {
                         Ok(data) => return Ok(predict_one(&model, &data)),
                         Err(err) => return Err(err),
                     }
@@ -141,7 +143,7 @@ pub fn predict(snowflake: &str) -> Result<String, BootError> {
     }
 }
 
-fn create_snowflake_puuid_map(file_name: &str) -> HashMap<String, String> {
+fn create_snowflake_summoner_map(file_name: &str) -> HashMap<String, String> {
     let file = File::open(file_name).unwrap();
     let reader = BufReader::new(file);
 
