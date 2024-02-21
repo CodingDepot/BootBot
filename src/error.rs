@@ -1,14 +1,13 @@
 use std::fmt;
 
 #[derive(Debug, Clone)]
-
 pub(crate) enum Kind {
     REQWUEST,
     SERDE,
     INTERNAL,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct BootError {
     pub(crate) kind: Kind,
     pub(crate) message: String,

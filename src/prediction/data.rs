@@ -77,9 +77,13 @@ pub fn get_current_match_data(name: &str, token: &str) -> Result<Array1<f32>, Bo
                         if let Ok(retry_seconds) = retry_after.to_str().unwrap_or(&DEFAULT_RETRY_TIME.to_string()).parse::<u64>() {
                             // print!(" /!\\ ({:?})", retry_seconds);
                             // let _ = std::io::stdout().flush();
+                            // print!(" /!\\ ({:?})", retry_seconds);
+                            // let _ = std::io::stdout().flush();
                             sleep(Duration::from_secs(retry_seconds));
                         }
                     } else {
+                        // print!(" /!\\ ({:?})", DEFAULT_RETRY_TIME);
+                        // let _ = std::io::stdout().flush();
                         // print!(" /!\\ ({:?})", DEFAULT_RETRY_TIME);
                         // let _ = std::io::stdout().flush();
                         sleep(Duration::from_secs(DEFAULT_RETRY_TIME));
